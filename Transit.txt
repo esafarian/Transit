@@ -1,0 +1,393 @@
+package transit;
+
+import java.util.ArrayList;
+
+/**
+ * This class contains methods which perform various operations on a layered linked
+ * list to simulate transit
+ * 
+ * @author Ishaan Ivaturi
+ * @author Prince Rawal
+ */
+public class Transit {
+	private TNode trainZero; // a reference to the zero node in the train layer
+
+	/* 
+	 * Default constructor used by the driver and Autolab. 
+	 * DO NOT use in your code.
+	 * DO NOT remove from this file
+	 */ 
+	public Transit() { trainZero = null; }
+
+	/* 
+	 * Default constructor used by the driver and Autolab. 
+	 * DO NOT use in your code.
+	 * DO NOT remove from this file
+	 */
+	public Transit(TNode tz) { trainZero = tz; }
+	
+	/*
+	 * Getter method for trainZero
+	 *
+	 * DO NOT remove from this file.
+	 */
+	public TNode getTrainZero () {
+		return trainZero;
+	}
+
+	public TNode walk(TNode head, int end){ //helper method for locations layer
+		TNode ptr = head;
+		for(; ptr != null && ptr.getLocation() < end; ptr = ptr.getNext());
+		if (ptr.getLocation() == end){
+				return ptr;
+		}
+		return null;
+	}
+
+	public ArrayList<TNode> mapTo(TNode head, int end){ //helper method
+		ArrayList<TNode> map = new ArrayList<>();
+		TNode ptr = head;
+		for(; ptr != null && ptr.getLocation() <= end; ptr = ptr.getNext()){
+				map.add(ptr);
+		}
+		return map;
+}
+
+	/**
+	 * Makes a layered linked list representing the given arrays of train stations, bus
+	 * stops, and walking locations. Each layer begins with a location of 0, even though
+	 * the arrays don't contain the value 0. Store the zero node in the train layer in
+	 * the instance variable trainZero.
+	 * 
+	 * @param trainStations Int array listing all the train stations
+	 * @param busStops Int array listing all the bus stops
+	 * @param locations Int array listing all the walking locations (always increments by 1)
+	 */
+	public void makeList(int[] trainStations, int[] busStops, int[] locations) {
+
+	    // UPDATE THIS METHOD
+		
+	/*	TNode ptr = null;
+		
+		for(int i = 0; i < trainStations.length; i++){
+			if(trainZero== null){
+				ptr = trainZero = new TNode();
+			}
+
+			else{
+				ptr.setNext(new TNode()); // node.next = new Node();
+				ptr.setNext(ptr); //node = node.next;
+			}
+
+			ptr.setLocation(locations[i]); //node.data = locations[i];
+			ptr.setDown(null);
+			ptr.setNext(ptr.getDown()); //node.next = node.down = null;
+
+			}
+
+			for(int j = 0; j < trainStations.length; j++){
+				for(int k = 0 ; k < busStops.length; k++){
+
+					if(busStops[k] == trainStations[j]){
+
+					}
+				}
+			}*/
+			int walk;
+			int bus;
+			int train;
+			
+			TNode firstLoc = new TNode(0);
+			TNode firstBus = new TNode(0,null,firstLoc);
+			trainZero = new TNode(0,null,firstBus);
+
+			TNode locNode = null;
+			TNode busNode = null;
+			TNode trainNode = null;
+			TNode prevLoc = firstLoc;
+			TNode prevBus = firstBus; 
+			TNode prevTrain = trainZero;
+			
+			// i = loc j = bus k = train
+			for (int i = 0, j = 0, k = 0; i < locations.length; i++){
+					walk = locations[i];
+					bus = busStops[j];
+					train = trainStations[k];
+
+					//walking locations
+					locNode = new TNode(walk);
+					if (prevLoc != null)
+							prevLoc.setNext(locNode);
+					prevLoc = locNode;
+					//bus stops
+					if (walk == bus){
+
+							// Creates the bus node and set loc as down
+							busNode = new TNode(bus, null, locNode);
+							if (prevBus != null)
+									prevBus.setNext(busNode);
+							prevBus = busNode;
+							j++;//bus++
+
+
+							// train
+							if (bus == train){
+									trainNode = new TNode(train, null, busNode);
+									if (prevTrain != null)
+											prevTrain.setNext(trainNode);
+									prevTrain = trainNode;
+									k++; //train++
+							}
+					}
+			}
+			System.out.println();
+	}
+	
+	/**
+	 * Modifies the layered list to remove the given train station but NOT its associated
+	 * bus stop or walking location. Do nothing if the train station doesn't exist
+	 * 
+	 * @param station The location of the train station to remove
+	 */
+	public void removeTrainStation(int station) { // checkkkkkkkkkkkkkkkkk
+			TNode ptr = trainZero.getNext();
+			TNode prev = trainZero;
+
+			while(ptr != null){
+					if (ptr.getLocation() == station){
+							prev.setNext(ptr.getNext());
+					}
+					prev = ptr;
+					ptr = ptr.getNext();
+			}
+		}
+
+	/**
+	 * Modifies the layered list to add a new bus stop at the specified location. Do nothing
+	 * if there is no corresponding walking location.
+	 * 
+	 * @param busStop The location of the bus stop to add
+	 */
+	public void addBusStop(int busStop) {
+	    // UPDATE THIS METHOD
+		TNode busZero = trainZero.getDown();
+		TNode ptr = busZero;
+		TNode down;
+		
+		while(ptr.getLocation()<busStop){
+				if (ptr.getNext().getLocation() > busStop){
+					
+						down = walk(ptr.getDown(), busStop);
+						TNode newBus = new TNode(busStop, ptr.getNext(), down); //creates new stop
+						ptr.setNext(newBus);
+				}
+				ptr = ptr.getNext();
+		}
+	}
+	
+	/**
+	 * Determines the optimal path to get to a given destination in the walking layer, and 
+	 * collects all the nodes which are visited in this path into an arraylist. 
+	 * 
+	 * @param destination An int representing the destination
+	 * @return
+	 */
+	public ArrayList<TNode> bestPath(int destination) {
+
+	    // UPDATE THIS METHOD
+		ArrayList<TNode> path = new ArrayList<>();
+		ArrayList<TNode> trains = mapTo(trainZero, destination);
+		ArrayList<TNode> buses = mapTo(trains.get(trains.size()-1).getDown(), destination);
+		ArrayList<TNode> locs = mapTo(buses.get(buses.size()-1).getDown(), destination);
+		path.addAll(trains);
+		path.addAll(buses);
+		path.addAll(locs);
+
+		return path;
+	
+	}
+
+	/**
+	 * Returns a deep copy of the given layered list, which contains exactly the same
+	 * locations and connections, but every node is a NEW node.
+	 * 
+	 * @return A reference to the train zero node of a deep copy
+	 */
+	public TNode duplicate() {
+
+	    // UPDATE THIS METHOD
+
+		int newTrainZero = trainZero.getLocation();
+		int newBusZero = trainZero.getDown().getLocation();
+		int newLocZero = trainZero.getDown().getDown().getLocation();
+
+		TNode tZero = new TNode();
+		TNode bZero = new TNode();
+		TNode lZero = new TNode();
+
+		tZero.setLocation(newTrainZero);
+		bZero.setLocation(newBusZero);
+		lZero.setLocation(newLocZero);
+
+		tZero.setDown(bZero);
+		bZero.setDown(lZero);
+
+		TNode ptr = tZero;
+
+		while(ptr != null){
+			
+
+
+		}
+
+
+	return null;
+	    
+	}
+
+	/**
+	 * Modifies the given layered list to add a scooter layer in between the bus and
+	 * walking layer.
+	 * 
+	 * @param scooterStops An int array representing where the scooter stops are located
+	 */
+	public void addScooter(int[] scooterStops) {
+
+	    // UPDATE THIS METHOD
+		TNode busZero = trainZero.getDown();
+		TNode locZero = busZero.getDown();
+		TNode scooterZero = new TNode();
+		scooterZero.setDown(locZero);
+		busZero.setDown(scooterZero);
+		TNode ptr = scooterZero;
+		locZero = locZero.getNext();
+
+		for(int i = 0; i < scooterStops.length; i++){
+			if(scooterZero == null){
+				scooterZero.setLocation(scooterStops[i]);
+			}
+			while(ptr != null){
+			//	TNode newScoot = new TNode();
+				ptr.setNext(new TNode());
+				ptr.setLocation(scooterStops[i]);
+				
+				//connect to walking layer
+				ptr.setDown(locZero);
+				locZero = locZero.getNext();
+
+				ptr = ptr.getNext();
+				
+		}
+	}
+		ptr = scooterZero;
+		while(ptr != null){ //connect to bus layer
+			busZero.setDown(ptr);
+			ptr = ptr.getNext();
+			busZero = busZero.getNext();
+		}
+		
+	}
+
+	/**
+	 * Used by the driver to display the layered linked list. 
+	 * DO NOT edit.
+	 */
+	public void printList() {
+		// Traverse the starts of the layers, then the layers within
+		for (TNode vertPtr = trainZero; vertPtr != null; vertPtr = vertPtr.getDown()) {
+			for (TNode horizPtr = vertPtr; horizPtr != null; horizPtr = horizPtr.getNext()) {
+				// Output the location, then prepare for the arrow to the next
+				StdOut.print(horizPtr.getLocation());
+				if (horizPtr.getNext() == null) break;
+				
+				// Spacing is determined by the numbers in the walking layer
+				for (int i = horizPtr.getLocation()+1; i < horizPtr.getNext().getLocation(); i++) {
+					StdOut.print("--");
+					int numLen = String.valueOf(i).length();
+					for (int j = 0; j < numLen; j++) StdOut.print("-");
+				}
+				StdOut.print("->");
+			}
+
+			// Prepare for vertical lines
+			if (vertPtr.getDown() == null) break;
+			StdOut.println();
+			
+			TNode downPtr = vertPtr.getDown();
+			// Reset horizPtr, and output a | under each number
+			for (TNode horizPtr = vertPtr; horizPtr != null; horizPtr = horizPtr.getNext()) {
+				while (downPtr.getLocation() < horizPtr.getLocation()) downPtr = downPtr.getNext();
+				if (downPtr.getLocation() == horizPtr.getLocation() && horizPtr.getDown() == downPtr) StdOut.print("|");
+				else StdOut.print(" ");
+				int numLen = String.valueOf(horizPtr.getLocation()).length();
+				for (int j = 0; j < numLen-1; j++) StdOut.print(" ");
+				
+				if (horizPtr.getNext() == null) break;
+				
+				for (int i = horizPtr.getLocation()+1; i <= horizPtr.getNext().getLocation(); i++) {
+					StdOut.print("  ");
+
+					if (i != horizPtr.getNext().getLocation()) {
+						numLen = String.valueOf(i).length();
+						for (int j = 0; j < numLen; j++) StdOut.print(" ");
+					}
+				}
+			}
+			StdOut.println();
+		}
+		StdOut.println();
+	}
+	
+	/**
+	 * Used by the driver to display best path. 
+	 * DO NOT edit.
+	 */
+	public void printBestPath(int destination) {
+		ArrayList<TNode> path = bestPath(destination);
+		for (TNode vertPtr = trainZero; vertPtr != null; vertPtr = vertPtr.getDown()) {
+			for (TNode horizPtr = vertPtr; horizPtr != null; horizPtr = horizPtr.getNext()) {
+				// ONLY print the number if this node is in the path, otherwise spaces
+				if (path.contains(horizPtr)) StdOut.print(horizPtr.getLocation());
+				else {
+					int numLen = String.valueOf(horizPtr.getLocation()).length();
+					for (int i = 0; i < numLen; i++) StdOut.print(" ");
+				}
+				if (horizPtr.getNext() == null) break;
+				
+				// ONLY print the edge if both ends are in the path, otherwise spaces
+				String separator = (path.contains(horizPtr) && path.contains(horizPtr.getNext())) ? ">" : " ";
+				for (int i = horizPtr.getLocation()+1; i < horizPtr.getNext().getLocation(); i++) {
+					StdOut.print(separator + separator);
+					
+					int numLen = String.valueOf(i).length();
+					for (int j = 0; j < numLen; j++) StdOut.print(separator);
+				}
+
+				StdOut.print(separator + separator);
+			}
+			
+			if (vertPtr.getDown() == null) break;
+			StdOut.println();
+
+			for (TNode horizPtr = vertPtr; horizPtr != null; horizPtr = horizPtr.getNext()) {
+				// ONLY print the vertical edge if both ends are in the path, otherwise space
+				StdOut.print((path.contains(horizPtr) && path.contains(horizPtr.getDown())) ? "V" : " ");
+				int numLen = String.valueOf(horizPtr.getLocation()).length();
+				for (int j = 0; j < numLen-1; j++) StdOut.print(" ");
+				
+				if (horizPtr.getNext() == null) break;
+				
+				for (int i = horizPtr.getLocation()+1; i <= horizPtr.getNext().getLocation(); i++) {
+					StdOut.print("  ");
+
+					if (i != horizPtr.getNext().getLocation()) {
+						numLen = String.valueOf(i).length();
+						for (int j = 0; j < numLen; j++) StdOut.print(" ");
+					}
+				}
+			}
+			StdOut.println();
+		}
+		StdOut.println();
+	}
+}
